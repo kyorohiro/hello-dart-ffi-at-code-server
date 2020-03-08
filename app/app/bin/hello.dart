@@ -5,7 +5,7 @@ ffi.DynamicLibrary dylib = ffi.DynamicLibrary.open("/app/libc/libhello.so");
 // void hello();
 typedef PrintHello_func = ffi.Void Function();
 typedef PrintHello = void Function();
-final PrintHello hello = dylib
+final PrintHello printHello = dylib
     .lookup<ffi.NativeFunction<PrintHello_func>>('print_hello')
     .asFunction();
 
@@ -31,8 +31,27 @@ var initBuffer = dylib
       .asFunction<InitBuffer>();
 
 
+class Hello extends ffi.Struct {
+  @ffi.Int32()
+  int x;
+
+  @ffi.Int32()
+  int y;
+
+  //@ffi.size(4)
+  //ffi.Pointer<ffi.Uint8> name;
+  // https://github.com/dart-lang/sdk/issues/35763
+  //ffi.Pointer<ffi.Uint8> name;
+}
+typedef CreateHello_func = ffi.Pointer<Hello> Function(ffi.Int32 x, ffi.Int32 y);
+typedef CreateHello = ffi.Pointer<Hello> Function(int x, int y);
+var createHello = dylib
+      .lookup<ffi.NativeFunction<CreateHello_func>>('create_hello')
+      .asFunction<CreateHello>();
+
+
 void main(List<String> arguments) {
-  hello();
+  printHello();
   int sum_ret = sum(1,2);
   print("sum_ret = ${sum_ret}");
 
@@ -58,6 +77,9 @@ void main(List<String> arguments) {
   bufferAsUint8List[0] = 101;
   print(buffer.elementAt(0).value);
 
+  //
+  var hello = createHello(10,20);
+  print("hello: x=${hello.ref.x}, y=${hello.ref.y}");
 }
 
 
